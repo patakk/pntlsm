@@ -1,7 +1,5 @@
-    npm install
+`npm install`
     
+`npm start`
     
-    npm start
-    
-    
-    npm run build
+`npm run build`

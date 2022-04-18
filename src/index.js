@@ -264,7 +264,7 @@ function reset(){
     generateBackground();
     generateForeground();
     //generateForeground();
-    //generateTrees();
+    generateTrees();
 
     
     loadShadersAndData();
@@ -346,7 +346,7 @@ function loadData(){
         transparent:  true
       });
 
-      console.log(vShader);
+      //console.log(vShader);
 
     points = new THREE.Points( geometry, material );
     scene.add( points );
@@ -358,7 +358,7 @@ function loadData(){
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( canvasWidth, canvasHeight );
 
-    renderer.domElement.id = "threejsCanvas"
+    renderer.domElement.id = "cnvs"
     //renderer.domElement.style.position = "absolute";
     //renderer.domElement.style.left = "0px";
     //renderer.domElement.style.top = "0px";
@@ -751,7 +751,6 @@ function generateForeground(){
 function windowResized() {
     if(renderer){
 
-
         var ww = window.innerWidth || canvas.clientWidth || body.clientWidth;
         var wh = window.innerHeight|| canvas.clientHeight|| body.clientHeight;
 
@@ -779,7 +778,7 @@ function windowResized() {
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( canvasWidth, canvasHeight );
     
-        renderer.domElement.id = "threejsCanvas"
+        renderer.domElement.id = "cnvs";
         //renderer.domElement.style.position = "absolute";
         //renderer.domElement.style.left = "0px";
         //renderer.domElement.style.top = "0px";
@@ -788,7 +787,7 @@ function windowResized() {
     
         points.material.uniforms.u_time.value = 0;
         points.material.uniforms.u_scrollscale.value = scrollscale;
-        console.log(winScale);
+        //console.log(winScale);
         points.material.uniforms.u_winscale.value = winScale;
 
         //composer.render();
@@ -804,9 +803,9 @@ function mouseClicked(){
 }
 
 function scroll(event) {
-    event.preventDefault();
-    scrollscale = scrollscale + event.deltaY * -0.002;
-    scrollscale = Math.min(Math.max(.125, scrollscale), 6);
+    //event.preventDefault();
+    //scrollscale = scrollscale + event.deltaY * -0.002;
+    //scrollscale = Math.min(Math.max(.125, scrollscale), 6);
   }
   
   

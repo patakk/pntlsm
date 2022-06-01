@@ -17,7 +17,7 @@ void main() {
     vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
 
     float pscale = max(size.x, size.y)*4. + 0.*5.*sin(u_time/60.*5. + .074414313*index);
-    gl_PointSize = pscale * u_scrollscale * u_winscale;
+    gl_PointSize = pscale * u_scrollscale * u_winscale * .5;
     gl_Position = projectionMatrix * mvPosition;
 
     // drawing animation

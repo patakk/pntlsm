@@ -117,13 +117,13 @@ const PostProcShader = {
         vec4 texel0 = texture2D( tDiffuse, vec2(.5) );
 
         //vec4 res = texelB*(1.-qq) + texelGray*qq + .0*(-.5+rand(xy*.1));
-        texelB.r = pow(texelB.r, seed1);
+        //texelB.r = pow(texelB.r, seed1);
         //texelB.g = pow(texelB.g, seed2);
         //texelB.b = pow(texelB.b, seed3);
         float pp = (texelB.x+texelB.y+texelB.z)/3.;
         //texelB.x = texel.x + .2*(pp-texel.x);
-        texelB.y = texel.y + .2*(pp-texel.y);
-        texelB.z = texel.z + .2*(pp-texel.z);
+        //texelB.y = texel.y + .2*(pp-texel.y);
+        //texelB.z = texel.z + .2*(pp-texel.z);
         vec4 res = texelB + .07*(-.5+rand(xy*.1));
 
         gl_FragColor = vec4( res.rgb, 1.0 );
@@ -352,7 +352,7 @@ function reset(){
     if(sunPos[1] > horizon){
         hsv[2] = fxrandom(0.4, 0.7)
     }
-    backgroundColor = HSVtoRGB(hsv[0], hsv[1], hsv[2])
+    backgroundColor = HSLToRGB(hsv[0], hsv[1], hsv[2])
 
     //while(myDot(backgroundColor, [0,1,0]) > 0.5){
     //    hsv = [Math.pow(fxrand()*.5, 2), fxrandom(0.2, 0.36), fxrandom(0.5, 0.7)]
@@ -890,6 +890,17 @@ function HSVtoRGB(h, s, v) {
     return [r, g, b]
 }
 
+const HSLToRGB = (h, s, l) => {
+    //s /= 100;
+    //l /= 100;
+    h = h*360;
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n =>
+      l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return [1 * f(0), 1 * f(8), 1 * f(4)];
+  };
+
 function myDot(col1, col2){
     let dd = Math.sqrt(col1[0]*col1[0]+col1[1]*col1[1]+col1[2]*col1[2]);
     let r = col1[0]/dd;
@@ -909,7 +920,7 @@ function generateBackground(){
     var offcl1 = [fxrandom(-33, 33), fxrandom(-33, 17), fxrandom(-77, 5)]
     var offcl2 = offcl1
 
-    for(var k = 0; k < 230000*horizon; k++){
+    for(var k = 0; k < 430000*horizon; k++){
         var x = fxrandom(0, baseWidth);
         var gg = map(power(constrain(fxrand(), 0, 1), 1), 0, 1, .5, 3);
         var y = Math.pow(fxrand(), .7);
@@ -1046,7 +1057,7 @@ function generateForeground(){
     var rr2 = fxrandom(rr1, rr1+0.35) // .565
     var dispr = fxrandom(0.03, 0.09)
 
-    for(var k = 0; k < 290000*(1-horizon); k++){
+    for(var k = 0; k < 490000*(1-horizon); k++){
         var x = fxrandom(0, baseWidth);
         var y = fxrandom(getHorizon(x), baseHeight*1.0);
 

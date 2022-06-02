@@ -8,8 +8,11 @@
       let search = new URLSearchParams(window.location.search)
       let alphabet = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
       var fxhash = search.get('fxhash') || "oo" + Array(49).fill(0).map(_=>alphabet[(Math.random()*alphabet.length)|0]).join('')
-      fxhash = 'oodu17mvuXKo4wVau2NbGowbpiNzkhPWLVNm3tDkxkcMgCyT6A2';
       //----fxhash = 'oodu17mvuXKo4wVau2NbGowbpiNzkhPWLVNm3tDkxkcMgCyT6A2';
+      //----fxhash = 'ooSvxFo5JgYTNVUW6btJ8kcWPmrev8MZ4BrYSn8KXSt3YvcXJA9';
+      //----fxhash = 'ooor2xpNJiW8MRWRWfK9M5JEi4HcMrG13wVDWFGwb7e1vR4NngQ';
+      //----fxhash = 'oo1WwqZt4Au7dMzUEwjQvFC537HKMszqHg58VvKQUatUxXVv9a9';
+      fxhash = 'oohvdq4obfhgnfh9ma3S4XF4U3ahA32okC9rSUFho3TQJVDRcpb';
       let b58dec = str=>[...str].reduce((p,c)=>p*alphabet.length+alphabet.indexOf(c)|0, 0)
       let fxhashTrunc = fxhash.slice(2)
       let regex = new RegExp(".{" + ((fxhash.length/4)|0) + "}", 'g')

@@ -13,7 +13,7 @@ const PostProcShader = {
             value: [500, 500]
         },
         'seed1': {
-            value: fxrandom(.5, 2.5)
+            value: fxrandom(.45, 1.65)
         },
         'seed2': {
             value: fxrandom(.5, 1.5)
@@ -120,6 +120,10 @@ const PostProcShader = {
         texelB.r = pow(texelB.r, seed1);
         //texelB.g = pow(texelB.g, seed2);
         //texelB.b = pow(texelB.b, seed3);
+        float pp = (texelB.x+texelB.y+texelB.z)/3.;
+        //texelB.x = texel.x + .2*(pp-texel.x);
+        texelB.y = texel.y + .2*(pp-texel.y);
+        texelB.z = texel.z + .2*(pp-texel.z);
         vec4 res = texelB + .07*(-.5+rand(xy*.1));
 
         gl_FragColor = vec4( res.rgb, 1.0 );
@@ -196,14 +200,16 @@ var skyclr = {
 
 
 var treeclr = {
-    a: [174, 82, 70, 255],
+    a: [154, 82, 70, 255],
     ad: [39, 25, 22, 0],
     b: [191, 95, 80, 255],
     bd: [39, 25, 22, 0],
-    c: [164, 82, 70, 188],
+    c: [183, 82, 70, 188],
     cd: [39, 25, 22, 33],
     d: [88, 77, 83, 118],
     dd: [11, 28, 17, 55],
+    e: [88, 77, 83, 140],
+    ed: [39, 25, 22, 30],
 }
 
 var groundclr = {
@@ -269,7 +275,7 @@ function draw(){
 
 function getHorizon(x){
     var dispr = .5*baseHeight*(-.5*power(noise(x*0.003+3133.41), 3))
-    return baseHeight*horizon + (1. - horizon*.8)*.6*baseHeight*(-.5*power(noise(x*0.003), 2)) + .3*dispr*fxrand();
+    return baseHeight*horizon + (1. - horizon*.8)*.6*baseHeight*(-.5*power(noise(x*0.003), 2)) + .0*dispr*fxrand();
 }
 
 function map(x, v1, v2, v3, v4){
@@ -307,28 +313,7 @@ function reset(){
     offcl = [0,0,0]
     seed = fxrand()*10000;
     horizon = fxrandom(0.24, 0.93);
-    sunPos = [fxrandom(0.2, 0.9), horizon+fxrandom(-.1, .1)];
-    sunSpread = fxrandom(1.85, 1.85);
-
-    var hsv = [Math.pow(fxrand(), 2), fxrandom(0.2, 0.66), fxrandom(0.35, 0.55)]
-    hsv[0] = fxrandom(0.5, 0.99)
-    if(hsv[0] > 0.5){
-        hsv[1] = fxrandom(0.2, 0.36)
-    }
-    backgroundColor = HSVtoRGB(hsv[0], hsv[1], hsv[2])
-
-    while(myDot(backgroundColor, [0,1,0]) > 0.5){
-        hsv = [Math.pow(fxrand()*.5, 2), fxrandom(0.2, 0.66), fxrandom(0.35, 0.55)]
-        backgroundColor = HSVtoRGB(hsv[0], hsv[1], hsv[2])
-    }
-    
-    sunColor = HSVtoRGB(fxrandom(0, .026), fxrandom(0.9, .99), fxrandom(.8, 1.0));
-    sunColor = [255.*sunColor[0], 255.*sunColor[1], 255.*sunColor[2]]
-    //sunColor = [255.*Math.pow(backgroundColor[0], .35), 255.*Math.pow(backgroundColor[1], 2.3), 255.*Math.pow(backgroundColor[2], 2.3)]
-    if((backgroundColor[0]+backgroundColor[1]+backgroundColor[2])/3 < .35){
-        sunColor = HSVtoRGB(fxrandom(0.4, .61), fxrandom(0.2, .34), fxrandom(.6, 1.0));
-        sunColor = [255.*sunColor[0], 255.*sunColor[1], 255.*sunColor[2]]
-    }
+    let sxx = fxrandom(0.05, 0.95);
 
     wind = fxrandom(-.4, +.4);
     if(fxrand() < .5)
@@ -343,11 +328,12 @@ function reset(){
     baseWidth = ress-33;
     baseHeight = ress-33;
 
+    winScale = ww / baseWidth;
 
     if(ww < ress+16 || wh < ress+16 || true){
         var mm = min(ww, wh);
-        canvasWidth = mm-16;
-        canvasHeight = mm-16;
+        canvasWidth = mm-33*mm/ress;
+        canvasHeight = mm-33*mm/ress;
         //baseWidth = mm-16-16;
         //baseHeight = mm-16-16;
     }
@@ -355,6 +341,33 @@ function reset(){
     ww = canvasWidth
     wh = canvasHeight
 
+    sunPos = [sxx, getHorizon(sxx*baseWidth)/baseHeight+fxrandom(-.0, .1)];
+    sunSpread = fxrandom(1.85, 1.85);
+
+
+    var hsv = [Math.pow(fxrand(), 2), fxrandom(0.2, 0.56), fxrandom(0.25, 0.35)]
+    hsv[0] = fxrandom(0.5, 0.9)
+    if(hsv[0] > 0.5){
+        hsv[1] = fxrandom(0.2, 0.26)
+    }
+    if(sunPos[1] > horizon){
+        hsv[2] = fxrandom(0.2, 0.56)
+    }
+    backgroundColor = HSVtoRGB(hsv[0], hsv[1], hsv[2])
+
+    while(myDot(backgroundColor, [0,1,0]) > 0.5){
+        hsv = [Math.pow(fxrand()*.5, 2), fxrandom(0.2, 0.36), fxrandom(0.35, 0.55)]
+        backgroundColor = HSVtoRGB(hsv[0], hsv[1], hsv[2])
+    }
+    
+    sunColor = HSVtoRGB(fxrandom(0, .026), fxrandom(0.9, .99), fxrandom(.8, 1.0));
+    sunColor = [255.*sunColor[0], 255.*sunColor[1], 255.*sunColor[2]]
+    //sunColor = [255.*Math.pow(backgroundColor[0], .35), 255.*Math.pow(backgroundColor[1], 2.3), 255.*Math.pow(backgroundColor[2], 2.3)]
+    if((backgroundColor[0]+backgroundColor[1]+backgroundColor[2])/3 < .35){
+        //sunColor = HSVtoRGB(fxrandom(0.4, .61), fxrandom(0.2, .34), fxrandom(.6, 1.0));
+        //sunColor = [255.*sunColor[0], 255.*sunColor[1], 255.*sunColor[2]]
+    }
+    console.log("fas", sunPos[1]*baseHeight, getHorizon(sunPos[0]*baseWidth))
 
     /*if(ww/wh > 1){
         baseWidth = Math.round(ress * ww/wh)
@@ -364,7 +377,6 @@ function reset(){
         baseWidth = ress
         baseHeight = Math.round(ress * wh/ww)
     }*/
-    winScale = ww / baseWidth;
 
     //groundclr.a[3] = 0;
     var rx, ry;
@@ -458,9 +470,10 @@ function loadData(){
     document.body.append(canvas2)
     */
     winScale = canvasWidth / ress;
-    camera = new THREE.OrthographicCamera(-canvasWidth/2/winScale, canvasWidth/2/winScale, canvasHeight/2/winScale, -canvasHeight/2/winScale, 1, 1000);
+    camera = new THREE.OrthographicCamera(-canvasWidth/2/winScale, canvasWidth/2/winScale, canvasHeight/2/winScale, -canvasHeight/2/winScale, 1, 2000);
+    //camera = new THREE.OrthographicCamera( 1000 * 1. / - 2, 1000 * 1. / 2, 1000 / 2, 1000 / - 2, 1, 4000 );
     //camera = new THREE.PerspectiveCamera( 27, canvasWidth / canvasHeight, 5, 3500 );
-    //camera.position.z = 2750;
+    camera.position.z = 1000;
 
     var ff = true;
     if(scene)
@@ -481,19 +494,20 @@ function loadData(){
     const particles = 33133;
 
 
-    const geometry = new THREE.BufferGeometry();
+    const pointsGeo = new THREE.BufferGeometry();
 
-    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( particlePositions, 3 ) );
-    geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( particleColors, 4 ) );
-    geometry.setAttribute( 'size', new THREE.Float32BufferAttribute( particleSizes, 2 ) );
-    geometry.setAttribute( 'angle', new THREE.Float32BufferAttribute( particleAngles, 1 ) );
-    geometry.setAttribute( 'index', new THREE.Float32BufferAttribute( particleIndices, 1 ) );
+    pointsGeo.setAttribute( 'position', new THREE.Float32BufferAttribute( particlePositions, 3 ) );
+    pointsGeo.setAttribute( 'color', new THREE.Float32BufferAttribute( particleColors, 4 ) );
+    pointsGeo.setAttribute( 'size', new THREE.Float32BufferAttribute( particleSizes, 2 ) );
+    pointsGeo.setAttribute( 'angle', new THREE.Float32BufferAttribute( particleAngles, 1 ) );
+    pointsGeo.setAttribute( 'index', new THREE.Float32BufferAttribute( particleIndices, 1 ) );
 
     var customUniforms = {
         u_time: { value: frameCount },
         u_scrollscale: { value: scrollscale },
-        u_winscale: { value: winScale*0+1 },
+        u_winscale: { value: 4. },
     };
+
 
     const material = new THREE.ShaderMaterial( {
         uniforms: customUniforms,
@@ -504,15 +518,21 @@ function loadData(){
 
       //console.log(vShader);
 
-    points = new THREE.Points( geometry, material );
+    points = new THREE.Points( pointsGeo, material );
     scene.add( points );
-
+    const sphereGeo = new THREE.BoxGeometry( 133,133,133);
+    const sphereMat = new THREE.MeshBasicMaterial( { color: 0xbbbbbb } );
+    const sphere = new THREE.Mesh( sphereGeo, sphereMat );
+    sphere.rotation.x = fxrand();
+    sphere.rotation.y = fxrand();
+    sphere.rotation.z = fxrand();
+    //scene.add( sphere );
     //
 
     if(ff)
         renderer = new THREE.WebGLRenderer({alpha: true});
-    renderer.setPixelRatio( 1.0 );
-    //renderer.setPixelRatio( window.devicePixelRatio );
+    //renderer.setPixelRatio( 1.0 );
+    renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( canvasWidth, canvasHeight );
 
     renderer.domElement.id = "cnvs"
@@ -532,11 +552,10 @@ function loadData(){
 
     points.material.uniforms.u_time.value = 0;
     points.material.uniforms.u_scrollscale.value = scrollscale;
-    points.material.uniforms.u_winscale.value = winScale;
-
+    points.material.uniforms.u_winscale.value = winScale*window.devicePixelRatio;
     const composer = new EffectComposer( renderer );
     const renderPass = new RenderPass( scene, camera );
-    PostProcShader.uniforms.resolution.value = [canvasWidth, canvasHeight];
+    PostProcShader.uniforms.resolution.value = [canvasWidth*window.devicePixelRatio, canvasHeight*window.devicePixelRatio];
     const luminosityPass = new ShaderPass( PostProcShader );
     composer.addPass( renderPass );
     composer.addPass( luminosityPass );
@@ -583,11 +602,18 @@ function drawTree(rx, ry, kk, pp){
     //pg.ellipse(rx, ry, 40, 40);
     var perspective = map(ry, getHorizon(rx), baseHeight, 0.5, 0.8);
     var perspective2 = map(ry, getHorizon(rx), baseHeight, 0.1, 0.6);
+    var perspective3 = map(ry, 0, baseHeight, 0.0, 1.0);
+    if(perspective3 < .25){
+        perspective3 = 0;
+    }
+    else{
+        perspective3 = 1;
+    }
     //perspective = 1;
 
     var seed1 = fxrandom(0, 100000);
     var detail = fxrandom(5, 8)*.45;
-    var amp = 633;
+    var amp = 133;
     var frq = 0.0002;
     var pscale = map(ry, getHorizon(rx), baseHeight, 0.1, 1.0);
     var fade = map(ry, baseHeight*horizon*1.0, baseHeight, 0.88, 1.0);
@@ -597,29 +623,43 @@ function drawTree(rx, ry, kk, pp){
 
     var pos, col, size, angle;
 
-    var offcl2 = [fxrandom(-25,+4), fxrandom(-25,+4), fxrandom(-25,+3)]
+    var offcl2 = [fxrandom(-25,+9), fxrandom(-15,+14), fxrandom(-25,+9)]
     //pg.fill(map(ry, baseHeight*horizon*1.0, baseHeight, 222, 255));
+    var coco = 0;
     for(var y = ry; y > 0; y -= detail*perspective){
-        var rootwide = constrain(map(y, ry, ry*startroot, 1, 0), 0, 1);
+        var rootwide0 = constrain(map(y, ry, ry*startroot, 1, 0), 0, 1);
         //rootwide = .8+.8*Math.pow(noise(rx, ry, y*.01), 3) + rootmax*Math.pow(rootwide, 4);
-        rootwide = 1 + rootmax*Math.pow(rootwide, 4);
+        var rootwide = 1 + rootmax*Math.pow(rootwide0, 4);
         for(var x = rx - pscale*maxwidth*rootwide; x < rx + pscale*maxwidth*rootwide; x += max(1, 4*perspective)){
-            var xx = x + amp*(-.5 + power(noise(rx*frq, y*frq, seed1), 2)) + fxrandom(-detail,detail)*1.7*(.4 + .6*Math.pow(1.-perspective2, 4));
-            var yy = y + fxrandom(-detail,detail)*1.9;
+            var xx = x + perspective3*map(y, ry, 0, 0, 1)*amp*(-.5 + power(noise(rx*frq, y*frq, seed1), 2)) + fxrandom(-detail,detail)*1.7*(.4 + .6*Math.pow(1.-perspective2, 4));
+            var yy = y + fxrandom(-detail,detail)*1.9 + 40*Math.pow(noise(x*0.04, y*0.04), 4)*rootwide0;
             col = [
-                offcl2[0] + offcl[0] + fade*treeclr.a[0] + fxrandom(-treeclr.ad[0], treeclr.ad[0]),
-                offcl2[1] + offcl[1] + fade*treeclr.a[1] + fxrandom(-treeclr.ad[1], treeclr.ad[1]),
-                offcl2[2] + offcl[2] + fade*treeclr.a[2] + fxrandom(-treeclr.ad[2], treeclr.ad[2]),
-                treeclr.a[3]*.6 + fxrandom(-treeclr.ad[3], treeclr.ad[3]),
+                offcl2[0] + offcl[0] + fade*treeclr.c[0]*1.12 + fxrandom(-treeclr.cd[0], treeclr.cd[0]),
+                offcl2[1] + offcl[1] + fade*treeclr.c[1] + fxrandom(-treeclr.cd[1], treeclr.cd[1]),
+                offcl2[2] + offcl[2] + fade*treeclr.c[2] + fxrandom(-treeclr.cd[2], treeclr.cd[2]),
+                treeclr.c[3]*.6 + fxrandom(-treeclr.cd[3], treeclr.cd[3]),
             ];
-            if(noise(xx*0.05, yy*0.004) + map(ry, baseHeight*horizon*1.0, baseHeight, -.2, .2) < 0.25+fxrandom(-.1,.1)+y/baseHeight){
-                col = [
-                    offcl2[0] + offcl[0] + fade*treeclr.b[0] + fxrandom(-treeclr.bd[0], treeclr.bd[0]),
-                    offcl2[1] + offcl[1] + fade*treeclr.b[1] + fxrandom(-treeclr.bd[1], treeclr.bd[1]),
-                    offcl2[2] + offcl[2] + fade*treeclr.b[2] + fxrandom(-treeclr.bd[2], treeclr.bd[2]),
-                    treeclr.b[3]*.416 + fxrandom(-treeclr.bd[3], treeclr.bd[3]),
-                ];
-                if(kk%10==9){
+            
+            pos = [xx, yy];
+            if(noise(xx*0.05, yy*0.004) + map(ry, baseHeight*horizon*1.0, baseHeight, -.2, .2) < 0.05+fxrandom(-.4,.4)+y/baseHeight){
+                if(sunPos[1]*baseHeight > baseHeight*.15+ getHorizon(sunPos[0]*baseWidth)){
+                    col = [
+                        offcl2[0] + offcl[0] + fade*treeclr.a[0]*.8 + fxrandom(-treeclr.ad[0], treeclr.ad[0]),
+                        offcl2[1] + offcl[1] + fade*treeclr.a[1] + fxrandom(-treeclr.ad[1], treeclr.ad[1]),
+                        offcl2[2] + offcl[2] + fade*treeclr.a[2] + fxrandom(-treeclr.ad[2], treeclr.ad[2]),
+                        treeclr.a[3] + fxrandom(-treeclr.ad[3], treeclr.ad[3]),
+                    ];
+                }
+                else{
+                    col = [
+                        offcl2[0] + offcl[0] + fade*treeclr.e[0] + fxrandom(-treeclr.ed[0], treeclr.ed[0]),
+                        offcl2[1] + offcl[1] + fade*treeclr.e[1] + fxrandom(-treeclr.ed[1], treeclr.ed[1]),
+                        offcl2[2] + offcl[2] + fade*treeclr.e[2] + fxrandom(-treeclr.ed[2], treeclr.ed[2]),
+                        treeclr.e[3] + fxrandom(-treeclr.ed[3], treeclr.ed[3]),
+                    ];
+
+                }
+                if(kk%10==319){
                     //col[0] = fxrandom(190, 250);
                     //col[1] = col[0];
                     //col[2] = col[0];
@@ -631,15 +671,55 @@ function drawTree(rx, ry, kk, pp){
                     //col = [h2r[0]*255., h2r[1]*255., h2r[2]*255., skyclr.c[3]*.6 + fxrandom(-treeclr.bd[3], treeclr.bd[3]),];
                 }
             }
-            else if(noise(xx*0.05, yy*0.004) + map(ry, baseHeight*horizon*1.0, baseHeight, -.2, .2) < 0.5+fxrandom(-.1,.1)){
-                col = [
-                    offcl2[0] + offcl[0] + fade*treeclr.c[0] + fxrandom(-treeclr.cd[0], treeclr.cd[0]),
-                    offcl2[1] + offcl[1] + fade*treeclr.c[1] + fxrandom(-treeclr.cd[1], treeclr.cd[1]),
-                    offcl2[2] + offcl[2] + fade*treeclr.c[2] + fxrandom(-treeclr.cd[2], treeclr.cd[2]),
-                    treeclr.c[3]*.6 + fxrandom(-treeclr.cd[3], treeclr.cd[3]),
-                ];
+            else{
+                    
+                if(sunPos[1] < horizon+.1 && false){
+                    var dir = [pos[0]-sunPos[0], pos[1]-sunPos[1]];
+                    var ll = Math.sqrt(dir[0]*dir[0]+dir[1]*dir[1])
+                    dir[0] /= ll;
+                    dir[1] /= ll;
+                    var sc = fxrandom(-11, 222);
+                    var ang = Math.atan2(dir[1], dir[0]);
+                    ang = Math.round(ang*10)/.1;
+                    dir[0] = Math.cos(ang);
+                    dir[1] = Math.sin(ang);
+                    dir[0] *= sc;
+                    dir[1] *= sc;
+                    pos[0] += dir[0];
+                    pos[1] += dir[1];
+                    col[0] = 222;
+                    col[1] = 166;
+                    col[2] = 133;
+                    col[3] = 55;
+                }  
+
+                if(sunPos[1]*baseHeight > baseHeight*.15+ getHorizon(sunPos[0]*baseWidth)){
+                    col = [
+                        offcl2[0] + offcl[0] + fade*treeclr.a[0]*.8 + fxrandom(-treeclr.ad[0], treeclr.ad[0]),
+                        offcl2[1] + offcl[1] + fade*treeclr.a[1] + fxrandom(-treeclr.ad[1], treeclr.ad[1]),
+                        offcl2[2] + offcl[2] + fade*treeclr.a[2] + fxrandom(-treeclr.ad[2], treeclr.ad[2]),
+                        treeclr.a[3] + fxrandom(-treeclr.ad[3], treeclr.ad[3]),
+                    ];
+                }
+                else{
+                    col = [
+                        offcl2[0] + offcl[0] + fade*treeclr.c[0] + fxrandom(-treeclr.cd[0], treeclr.cd[0]),
+                        offcl2[1] + offcl[1] + fade*treeclr.c[1] + fxrandom(-treeclr.cd[1], treeclr.cd[1]),
+                        offcl2[2] + offcl[2] + fade*treeclr.c[2] + fxrandom(-treeclr.cd[2], treeclr.cd[2]),
+                        treeclr.c[3] + fxrandom(-treeclr.cd[3], treeclr.cd[3]),
+                    ];
+
+                }
+                
+                if(noise(xx*0.05, yy*0.004) + map(ry, baseHeight*horizon*1.0, baseHeight, -.2, .2) < 0.5+fxrandom(-.1,.1)){
+                    //col = [
+                    //    offcl2[0] + offcl[0] + fade*treeclr.c[0] + fxrandom(-treeclr.cd[0], treeclr.cd[0]),
+                    //    offcl2[1] + offcl[1] + fade*treeclr.c[1] + fxrandom(-treeclr.cd[1], treeclr.cd[1]),
+                    //    offcl2[2] + offcl[2] + fade*treeclr.c[2] + fxrandom(-treeclr.cd[2], treeclr.cd[2]),
+                    //    treeclr.c[3]*.6 + fxrandom(-treeclr.cd[3], treeclr.cd[3]),
+                    //];
+                }
             }
-            pos = [xx, yy];
             angle = radians(fxrandom(-16,16));
             if(fxrand() > 0.97){
                 var rb = fxrandom(110,255);
@@ -653,17 +733,33 @@ function drawTree(rx, ry, kk, pp){
                 size = [5.15*fxrandom(.8, 1.2)*perspective, 5*fxrandom(.9, 1.1)*perspective];
                 //mySquare(0, 0, 6.5*fxrandom(.8, 1.2)*perspective, 4*fxrandom(.9, 1.1)*perspective);
             }
+            coco++;
             //cnt++;
             if(pos[0] < 0 || pos[0] > baseWidth)
                 continue
             if(pos[1] < 0 || pos[1] > baseHeight)
                 continue
 
+            if(kk == 13)
+            {
+                //col[0] = 244;
+                //col[1] = 244;
+                //col[2] = 244;
+                //console.log(pos)
+                //pos[0] = pos[1]%baseWidth
+                //pos[1] = getHorizon(pos[0])
+                //pos[0] = rx
+                //pos[1] = ry
+                //size[0] *= 10;
+                //size[1] *= 10;
+            }
+
             pos[0] = pos[0] - canvasWidth/2*0 - baseWidth/2;
             pos[1] = pos[1] - canvasHeight/2*0 - baseHeight/2;
             pos[1] *= -1;
 
-            particlePositions.push(pos[0], pos[1], -1);
+
+            particlePositions.push(pos[0], pos[1], 0);
             particleColors.push(col[0]/255., col[1]/255., col[2]/255., col[3]/255.);
             //particleColors.push(Math.pow(1.-perspective2, 2), Math.pow(1.-perspective2, 2), Math.pow(1.-perspective2, 2), col[3]/255.);
             particleSizes.push(size[0], size[1]);
@@ -680,18 +776,22 @@ function drawTree(rx, ry, kk, pp){
 
 function generateTrees(){
 
-    if(fxrand() < .3){
+    //console.log(sunPos, horizon)
+    if(fxrand() < 1.36){
         var kk = 0;
-        var nn = Math.floor(fxrandom(100, 150));
-        var bareGroundSpread = fxrandom(0.1, 0.2);
-        nn = (1. - bareGroundSpread)*100 * fxrandom(1.7, 3.3);
-        var middle = fxrandom(.35, .65);
+        var nn = Math.floor(fxrandom(100, 150)*2);
+        var bareGroundSpread = fxrandom(0.1, 0.3);
+        nn = (1. - bareGroundSpread)*fxrandom(122, 128);
+        var middle = fxrandom(.4, .6);
         while(kk < nn){
 
             var rx = fxrand();
             while(rx > middle-bareGroundSpread && rx < middle+bareGroundSpread){
                 rx = fxrand();
             }
+
+            //if(rx < .5)
+            //    console.log(kk)
 
             var pp = map(kk, 0, nn, 0.03, 1);
             pp = Math.pow(pp, 12);
@@ -710,12 +810,11 @@ function generateTrees(){
         nn = treeGroundSpread*100 * fxrandom(1.0, 4.3);
         var middle = fxrandom(treeGroundSpread, 1.-treeGroundSpread);
         treeGroundSpread = fxrandom(0.1, 0.35);
-        if(fxrand() < .5){
+        if(fxrand() < 1.5){
             nn = Math.floor(fxrandom(50, 200));
             middle = 0.5;
             treeGroundSpread = fxrandom(.38, .5);
         }
-        console.log(nn);
         while(kk < nn){
             var pp = map(kk, 0, nn, 0.03, 1);
             pp = Math.pow(pp, 12);
@@ -756,7 +855,7 @@ function drawHole(x, y, lx, rx){
             pos[1] = pos[1] - canvasHeight/2*0 - baseHeight/2;
             pos[1] *= -1;
 
-            particlePositions.push(pos[0], pos[1], -1);
+            particlePositions.push(pos[0], pos[1], 0);
             particleColors.push(col[0]/255., col[1]/255., col[2]/255., col[3]/255.);
             particleSizes.push(size[0], size[1]);
             particleAngles.push(angle);
@@ -839,8 +938,8 @@ function generateBackground(){
                 //mySquare(0, 0, fxrandom(10,20)*.2*perspective, fxrandom(10,20)*.3*perspective);
             }
             else{
-                //if(fxrand() < map(y, 0, baseHeight*horizon, 0, 1)){
-                if(map(y, 0, baseHeight*horizon, 0, 1) + fxrandom(-.22, .22) + .45*(-.5+power(noise(x*.006+1351.31, y*.006+33.31), 3)) < .35){
+                if(fxrand() < map(y, 0, baseHeight*horizon, 0, 1)){
+                //if(map(y, 0, baseHeight*horizon, 0, 1) + fxrandom(-.22, .22) + .45*(-.5+power(noise(x*.006+1351.31, y*.006+33.31), 3)) < .35){
                     col = [
                         offcl1[0] + skyclr.a[0] + fxrandom(-skyclr.ad[0], skyclr.ad[0]),
                         offcl1[1] + skyclr.a[1] + fxrandom(-skyclr.ad[1], skyclr.ad[1]),
@@ -879,21 +978,28 @@ function generateBackground(){
                 size = [dx, dx*(1 + fxrandom(1.5, 1.8))];
                 //size = [fxrandom(2, 10)*.315, fxrandom(2, 10)*.35];
 
-                angle = radians(-20 + 40*noise(x*0.01, y*0.01))+wind + fxrandom(-.1, .1);
                 //mySquare(0, 0, fxrandom(5, 10)*.35, fxrandom(5, 10)*.35);
                 //pg.pop(); 
                 // SUN
-                let sup = [sunPos[0]*baseWidth, sunPos[1]*baseHeight];
+                let sup = [sunPos[0]*baseWidth + fxrandom(-30, 30), sunPos[1]*baseHeight + fxrandom(-77, 77)];
                 var dd = Math.sqrt((x-sup[0])*(x-sup[0])+(y-sup[1])*(y-sup[1])) / Math.sqrt(sup[0]*sup[0]+sup[1]*sup[1])
-                dd = dd * map(noise(x*0.005, y*0.005, 831.31), 0, 1, .6, 2);
+                //dd = dd * map(noise(x*0.005, y*0.005, 831.31), 0, 1, .6, 2);
                 dd = min(dd*sunSpread, 1.0);
                 //col[0] = 255;
                 //col[1] = 255;
                 //col[2] = 255;
-                col[0] = sunColor[0]*(1-dd)+dd*col[0];
-                col[1] = sunColor[1]*(1-dd)+dd*col[1];
-                col[2] = sunColor[2]*(1-dd)+dd*col[2];
-                col[3] = 120;
+                angle = radians(-20 + 40*noise(x*0.01, y*0.01))+wind + fxrandom(-.1, .1);
+                if(1-dd>.5 && fxrand() > .6){
+                    //angle = angle + (-Math.atan2(sunPos[1]*baseWidth - y, sunPos[0]*baseWidth - x) - angle);
+                }
+
+                if((backgroundColor[0]+backgroundColor[1]+backgroundColor[2])/3 > -.35){
+                    col[0] = sunColor[0]*(1-dd)*(.5 + .5*sunPos[1])+dd*col[0];
+                    col[1] = sunColor[1]*(1-dd)*(2-sunPos[1])+dd*col[1];
+                    col[2] = sunColor[2]*(1-dd)*(2-sunPos[1])+dd*col[2];
+                    col[3] = 127;
+
+                }
             }
         }
 
@@ -906,7 +1012,7 @@ function generateBackground(){
         pos[1] = pos[1] - canvasHeight/2*0 - baseHeight/2;
         pos[1] *= -1;
 
-        particlePositions.push(pos[0], pos[1], -1);
+        particlePositions.push(pos[0], pos[1], 0);
         particleColors.push(col[0]/255., col[1]/255., col[2]/255., col[3]/255.);
         particleSizes.push(size[0], size[1]);
         particleAngles.push(angle);
@@ -995,7 +1101,7 @@ function generateForeground(){
         pos[1] = pos[1] - canvasHeight/2*0 - baseHeight/2;
         pos[1] *= -1;
 
-        particlePositions.push(pos[0], pos[1], -1);
+        particlePositions.push(pos[0], pos[1], 0);
         particleColors.push(col[0]/255., col[1]/255., col[2]/255., col[3]/255.);
         particleSizes.push(size[0], size[1]);
         particleAngles.push(angle);
@@ -1010,16 +1116,16 @@ function windowResized() {
         var ww = window.innerWidth || canvas.clientWidth || body.clientWidth;
         var wh = window.innerHeight|| canvas.clientHeight|| body.clientHeight;
 
-        baseWidth = ress-16;
-        baseHeight = ress-16
+        baseWidth = ress-33;
+        baseHeight = ress-33;
 
         canvasWidth = ress;
         canvasHeight = ress;
 
         if(ww < ress+16 || wh < ress+16 || true){
             var mm = min(ww, wh);
-            canvasWidth = mm-16;
-            canvasHeight = mm-16;
+            canvasWidth = mm-10*mm/ress;
+            canvasHeight = mm-10*mm/ress;
             //baseWidth = mm-16-16;
             //baseHeight = mm-16-16;
         }
@@ -1031,8 +1137,8 @@ function windowResized() {
         camera.bottom = -canvasHeight/2 / winScale;
         camera.updateProjectionMatrix();
 
-        renderer.setPixelRatio( 1.0 );
-        //renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        //renderer.setPixelRatio( 1.0000 );
         renderer.setSize( canvasWidth, canvasHeight );
     
         renderer.domElement.id = "cnvs";
@@ -1045,11 +1151,11 @@ function windowResized() {
         points.material.uniforms.u_time.value = 0;
         points.material.uniforms.u_scrollscale.value = scrollscale;
         //console.log(winScale);
-        points.material.uniforms.u_winscale.value = winScale;
+        points.material.uniforms.u_winscale.value = winScale*window.devicePixelRatio;
 
         const composer = new EffectComposer( renderer );
         const renderPass = new RenderPass( scene, camera );
-        PostProcShader.uniforms.resolution.value = [canvasWidth, canvasHeight];
+        PostProcShader.uniforms.resolution.value = [canvasWidth*window.devicePixelRatio, canvasHeight*window.devicePixelRatio];
         const luminosityPass = new ShaderPass( PostProcShader );
         composer.addPass( renderPass );
         composer.addPass( luminosityPass );

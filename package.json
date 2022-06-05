@@ -12,7 +12,8 @@
   "dependencies": {
     "build": "^0.1.4",
     "public": "^0.1.5",
-    "three": "^0.139.2"
+    "three": "^0.139.2",
+    "util": "^0.12.4"
   },
   "devDependencies": {
     "adm-zip": "^0.5.9",

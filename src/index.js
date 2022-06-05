@@ -106,25 +106,25 @@ const PostProcShader = {
         dir = vec2(dir.y, -dir.x);
         dir = dir / length(dir);
 
-        vec4 texelB = blur(uv, qq*2.*1./resolution.x, dir);
+        vec4 texelB = blur(uv, qq*1.3*1./resolution.x, dir);
 
-        float lum = texelB.r * 0.3 + texelB.g * 0.59 + texelB.b * 0.11;
-        lum = pow(lum, 0.15);
-        vec4 texelGray = vec4(vec3( lum ), 1.0);
-        texelGray = texelGray*0.5 + texelB*0.5;
+        //float lum = texelB.r * 0.3 + texelB.g * 0.59 + texelB.b * 0.11;
+        //lum = pow(lum, 0.15);
+        //vec4 texelGray = vec4(vec3( lum ), 1.0);
+        //texelGray = texelGray*0.5 + texelB*0.5;
 
-        vec4 texel = texture2D( tDiffuse, (xy+vec2(+0.0, +0.0)) / resolution );
-        vec4 texel0 = texture2D( tDiffuse, vec2(.5) );
+        //vec4 texel = texture2D( tDiffuse, (xy+vec2(+0.0, +0.0)) / resolution );
+        //vec4 texel0 = texture2D( tDiffuse, vec2(.5) );
 
         //vec4 res = texelB*(1.-qq) + texelGray*qq + .0*(-.5+rand(xy*.1));
-        //texelB.r = pow(texelB.r, seed1);
+        texelB.r = pow(texelB.r, seed1);
         //texelB.g = pow(texelB.g, seed2);
         //texelB.b = pow(texelB.b, seed3);
-        float pp = (texelB.x+texelB.y+texelB.z)/3.;
+        //float pp = (texelB.x+texelB.y+texelB.z)/3.;
         //texelB.x = texel.x + .2*(pp-texel.x);
         //texelB.y = texel.y + .2*(pp-texel.y);
         //texelB.z = texel.z + .2*(pp-texel.z);
-        vec4 res = texelB + .07*(-.5+rand(xy*.1));
+        vec4 res = texelB + .099*(-.5+rand(xy*.1));
 
         gl_FragColor = vec4( res.rgb, 1.0 );
 
@@ -185,6 +185,8 @@ var treeGroundSpread;
 var sunPos;
 var sunColor;
 var sunSpread;
+var isDark;
+var hasSun;
 
 var backgroundColor;
 
@@ -311,7 +313,10 @@ function reset(){
     offcl = [0,0,0]
     seed = fxrand()*10000;
     horizon = fxrandom(0.24, 0.93);
-    let sxx = fxrandom(0.05, 0.95);
+
+    isDark = fxrand() < .08;
+
+    hasSun = fxrand() < .5;
 
     wind = fxrandom(-.4, +.4);
     if(fxrand() < .5)
@@ -323,15 +328,15 @@ function reset(){
     var ww = window.innerWidth || canvas.clientWidth || body.clientWidth;
     var wh = window.innerHeight|| canvas.clientHeight|| body.clientHeight;
 
-    baseWidth = ress-33;
-    baseHeight = ress-33;
+    baseWidth = ress-22;
+    baseHeight = ress-22;
 
     winScale = ww / baseWidth;
-
+    
     if(ww < ress+16 || wh < ress+16 || true){
         var mm = min(ww, wh);
-        canvasWidth = mm-33*mm/ress;
-        canvasHeight = mm-33*mm/ress;
+        canvasWidth = mm-22*mm/ress;
+        canvasHeight = mm-22*mm/ress;
         //baseWidth = mm-16-16;
         //baseHeight = mm-16-16;
     }
@@ -339,20 +344,25 @@ function reset(){
     ww = canvasWidth
     wh = canvasHeight
 
+    let sxx = fxrandom(0.05, 0.95);
     sunPos = [sxx, getHorizon(sxx*baseWidth)/baseHeight+fxrandom(-.0, .1)];
     sunSpread = fxrandom(1.85, 1.85);
 
 
-    var hsv = [Math.pow(fxrand(), 2), fxrandom(0.2, 0.56), fxrandom(0.5, 0.7)]
-    hsv[0] = fxrandom(0.0, 0.9)
-    if(hsv[0] > 0.5){
-        hsv[1] = fxrandom(0.14, 0.15)
-        hsv[2] = fxrandom(0.6, 0.8)
+    var hsv = [Math.pow(fxrandom(0.0, 0.9), 2), fxrandom(0.2, 0.56), fxrandom(0.3, 0.76)]
+    if(hsv[0] > 0.05){
+        hsv[1] = fxrandom(0.14, 0.315)
+        //hsv[2] = fxrandom(0.2, 0.8)
     }
     if(sunPos[1] > horizon){
-        hsv[2] = fxrandom(0.4, 0.7)
+        //hsv[2] = fxrandom(0.4, 0.7)
     }
-    backgroundColor = HSLToRGB(hsv[0], hsv[1], hsv[2])
+
+    if(isDark){
+        hsv[2] *= .5;
+    }
+
+    backgroundColor = HSLtoRGB(hsv[0], hsv[1], hsv[2])
 
     //while(myDot(backgroundColor, [0,1,0]) > 0.5){
     //    hsv = [Math.pow(fxrand()*.5, 2), fxrandom(0.2, 0.36), fxrandom(0.5, 0.7)]
@@ -360,14 +370,24 @@ function reset(){
     //}
     //backgroundColor[2] = Math.pow(backgroundColor[2], .6)
     
-    sunColor = HSVtoRGB(fxrandom(0, .026), fxrandom(0.9, .99), fxrandom(.8, 1.0));
+    sunColor = [fxrandom(0.992, 1.036)%1.0, fxrandom(0.9, .96), fxrandom(.8, 1.0)]
+    if(sunColor[0] > .13 && sunColor[0] < .98){
+        //sunColor[1] *= .7;
+        //sunColor[2] *= .7;
+    }
+    sunColor = HSVtoRGB(sunColor[0], sunColor[1], sunColor[2]);
     sunColor = [255.*sunColor[0], 255.*sunColor[1], 255.*sunColor[2]]
+    if(isDark){
+        sunColor = HSLtoRGB(fxrandom(0.5, .7), fxrandom(0.1, .2), fxrandom(.4, .6));
+        sunColor = [255.*sunColor[0], 255.*sunColor[1], 255.*sunColor[2]]
+        sunPos[1] = fxrandom(-.4, -.3);
+        sunSpread = fxrandom(1.1, 1.1);
+    }
     //sunColor = [255.*Math.pow(backgroundColor[0], .35), 255.*Math.pow(backgroundColor[1], 2.3), 255.*Math.pow(backgroundColor[2], 2.3)]
     if((backgroundColor[0]+backgroundColor[1]+backgroundColor[2])/3 < .35){
         //sunColor = HSVtoRGB(fxrandom(0.4, .61), fxrandom(0.2, .34), fxrandom(.6, 1.0));
         //sunColor = [255.*sunColor[0], 255.*sunColor[1], 255.*sunColor[2]]
     }
-    console.log("fas", sunPos[1]*baseHeight, getHorizon(sunPos[0]*baseWidth))
 
     /*if(ww/wh > 1){
         baseWidth = Math.round(ress * ww/wh)
@@ -486,7 +506,6 @@ function loadData(){
     var pixelData = paletteCanvas.getContext('2d').getImageData(rx, ry, 1, 1).data;
     //backgroundColor = [pixelData[0]/255., pixelData[1]/255., pixelData[2]/255.];
 
-    scene.background = new THREE.Color( backgroundColor[0], backgroundColor[1], backgroundColor[2]);
     //scene.fog = new THREE.Fog( 0x050505, 2000, 3500 );
 
     //
@@ -549,6 +568,9 @@ function loadData(){
     else
         renderer.domElement.style.borderWidth = "0px";
 
+        
+    scene.background = new THREE.Color( backgroundColor[0], backgroundColor[1], backgroundColor[2]);
+
 
     points.material.uniforms.u_time.value = 0;
     points.material.uniforms.u_scrollscale.value = scrollscale;
@@ -562,8 +584,9 @@ function loadData(){
     composer.render();
     //requestAnimationFrame(animate);
     //renderer.render( scene, camera );
-    fxpreview();
-    console.log('hash:', fxhash);
+    if(isFxpreview)
+        fxpreview();
+    //console.log('hash:', fxhash);
     //window.addEventListener( 'resize', onWindowResize );
 }
 
@@ -595,6 +618,7 @@ var cnt = 0
 
 var shft = fxrandom(0.6, 1.05)%1.0;
 var shft2 = fxrandom(0.0, 1.0)%1.0;
+var hasAtt = fxrand() < .5;
 
 function drawTree(rx, ry, kk, pp){
     
@@ -625,6 +649,9 @@ function drawTree(rx, ry, kk, pp){
     var pos, col, size, angle;
 
     var offcl2 = [fxrandom(-25,+9), fxrandom(-15,+14), fxrandom(-25,+9)]
+    var attenuation = fxrandom(.1, .5)
+    if(!hasAtt)
+        attenuation = 0;
     //pg.fill(map(ry, baseHeight*horizon*1.0, baseHeight, 222, 255));
     var coco = 0;
     for(var y = ry; y > 0; y -= detail*perspective){
@@ -642,7 +669,7 @@ function drawTree(rx, ry, kk, pp){
             ];
             
             pos = [xx, yy];
-            if(noise(xx*0.05, yy*0.004) + map(ry, baseHeight*horizon*1.0, baseHeight, -.2, .2) < 0.05+fxrandom(-.4,.4)+y/baseHeight){
+            if(noise(xx*0.05, yy*0.004) + map(ry, baseHeight*horizon*1.0, baseHeight, -.2, .2) < 0.2+fxrandom(-.3,.3)+y/baseHeight){
                 if(sunPos[1]*baseHeight > baseHeight*.15+ getHorizon(sunPos[0]*baseWidth)){
                     col = [
                         offcl2[0] + offcl[0] + fade*treeclr.a[0]*.8 + fxrandom(-treeclr.ad[0], treeclr.ad[0]),
@@ -650,6 +677,7 @@ function drawTree(rx, ry, kk, pp){
                         offcl2[2] + offcl[2] + fade*treeclr.a[2] + fxrandom(-treeclr.ad[2], treeclr.ad[2]),
                         treeclr.a[3] + fxrandom(-treeclr.ad[3], treeclr.ad[3]),
                     ];
+
                 }
                 else{
                     col = [
@@ -659,6 +687,11 @@ function drawTree(rx, ry, kk, pp){
                         treeclr.e[3] + fxrandom(-treeclr.ed[3], treeclr.ed[3]),
                     ];
 
+                }
+                if(!hasSun){
+                    col[0] = col[0] + .6*(backgroundColor[0]*255 - col[0]);
+                    //col[1] = col[1] + .35*(backgroundColor[1]*255 - col[1]);
+                    //col[2] = col[2] + .35*(backgroundColor[2]*255 - col[2]);
                 }
                 if(kk%10==319){
                     //col[0] = fxrandom(190, 250);
@@ -709,7 +742,13 @@ function drawTree(rx, ry, kk, pp){
                         offcl2[2] + offcl[2] + fade*treeclr.c[2] + fxrandom(-treeclr.cd[2], treeclr.cd[2]),
                         treeclr.c[3] + fxrandom(-treeclr.cd[3], treeclr.cd[3]),
                     ];
-
+                    
+                    if(!hasSun){
+                        col[0] = col[0] + attenuation*(backgroundColor[0]*255 - col[0]);
+                        col[1] = col[1] + attenuation*(backgroundColor[1]*255 - col[1]);
+                        //col[1] = col[1] + .35*(backgroundColor[1]*255 - col[1]);
+                        //col[2] = col[2] + .35*(backgroundColor[2]*255 - col[2]);
+                    }
                 }
                 
                 if(noise(xx*0.05, yy*0.004) + map(ry, baseHeight*horizon*1.0, baseHeight, -.2, .2) < 0.5+fxrandom(-.1,.1)){
@@ -759,9 +798,16 @@ function drawTree(rx, ry, kk, pp){
             pos[1] = pos[1] - canvasHeight/2*0 - baseHeight/2;
             pos[1] *= -1;
             
-            //col[0] = offcl[0] + 33-map(y, 0, ry, 0, 1)*22 + kk%20;
-            //col[1] = offcl[1] + 55-map(y, 0, ry, 0, 1)*22 + kk%20;
-            //col[2] = offcl[2] + 55 + kk%20;
+            if(isDark){
+                col[0] = offcl[0] + 33-map(y, 0, ry, 0, 1)*22 + kk%20;
+                col[1] = offcl[1] + 56-map(y, 0, ry, 0, 1)*22 + kk%20;
+                col[2] = offcl[2] + 62 + kk%20;
+
+                attenuation = map(y, 0, ry, .5, 0);
+
+                col[0] = col[0] + attenuation*(backgroundColor[0]*255 - col[0]) + fxrandom(-7, 7);
+                col[1] = col[1] + attenuation*(backgroundColor[1]*255 - col[1]) + fxrandom(-7, 7);
+            }
 
 
             particlePositions.push(pos[0], pos[1], 0);
@@ -782,12 +828,13 @@ function drawTree(rx, ry, kk, pp){
 function generateTrees(){
 
     //console.log(sunPos, horizon)
-    if(fxrand() < .36){
+    var rxfrq = fxrandom(0.005, 0.03);
+    if(fxrand() < .5){
         var kk = 0;
         var nn = Math.floor(fxrandom(100, 150)*2);
-        var bareGroundSpread = fxrandom(0.1, 0.3);
+        var bareGroundSpread = fxrandom(0.1, 0.4);
         nn = (1. - bareGroundSpread)*fxrandom(122, 128);
-        var middle = fxrandom(.4, .6);
+        var middle = fxrandom(.25, .65);
         while(kk < nn){
 
             var rx = fxrand();
@@ -800,6 +847,7 @@ function generateTrees(){
 
             var pp = map(kk, 0, nn, 0.03, 1);
             pp = Math.pow(pp, 12);
+            //pp *= .2 + .8*power(noise(rx*rxfrq), 4);
             var x = map(rx, 0, 1, 0, baseWidth);
             var y = map(pp, 0, 1, getHorizon(x)*1, baseHeight) + 0*fxrandom(0, baseHeight/30);
             drawTree(x, y, kk, pp);
@@ -811,11 +859,11 @@ function generateTrees(){
         var kk = 0;
         var nn = Math.floor(fxrandom(5, 50));
         var ex = 4;
-        treeGroundSpread = fxrandom(0.1, 0.35);
+        treeGroundSpread = fxrandom(0.1, 0.5);
         nn = treeGroundSpread*100 * fxrandom(1.0, 4.3);
         var middle = fxrandom(treeGroundSpread, 1.-treeGroundSpread);
-        treeGroundSpread = fxrandom(0.1, 0.35);
-        if(fxrand() < 1.5){
+        //treeGroundSpread = fxrandom(0.1, 0.35);
+        if(fxrand() < -1.5){
             nn = Math.floor(fxrandom(50, 200));
             middle = 0.5;
             treeGroundSpread = fxrandom(.38, .5);
@@ -826,10 +874,11 @@ function generateTrees(){
             //var x = fxrandom(0, baseWidth);
             //var y = map(pp, 0, 1, getHorizon(x)*1.1, baseHeight) + 0*fxrandom(0, baseHeight/30);
     
-            var randomx = middle + fxrandom(-treeGroundSpread, +treeGroundSpread);
+            var rx = middle + fxrandom(-treeGroundSpread, +treeGroundSpread);
+            //pp *= .2 + .8*power(noise(rx*rxfrq), 4);
             //if(fxrand() > prob)
             //    continue;
-            var x = map(randomx, 0, 1, 0, baseWidth);
+            var x = map(rx, 0, 1, 0, baseWidth);
             var y = map(pp, 0, 1, getHorizon(x)*1, baseHeight) + 0*fxrandom(0, baseHeight/30);
             drawTree(x, y, kk, pp);
             kk++;
@@ -890,7 +939,7 @@ function HSVtoRGB(h, s, v) {
     return [r, g, b]
 }
 
-const HSLToRGB = (h, s, l) => {
+const HSLtoRGB = (h, s, l) => {
     //s /= 100;
     //l /= 100;
     h = h*360;
@@ -920,7 +969,7 @@ function generateBackground(){
     var offcl1 = [fxrandom(-33, 33), fxrandom(-33, 17), fxrandom(-77, 5)]
     var offcl2 = offcl1
 
-    for(var k = 0; k < 430000*horizon; k++){
+    for(var k = 0; k < 390000*horizon; k++){
         var x = fxrandom(0, baseWidth);
         var gg = map(power(constrain(fxrand(), 0, 1), 1), 0, 1, .5, 3);
         var y = Math.pow(fxrand(), .7);
@@ -997,9 +1046,13 @@ function generateBackground(){
                 //mySquare(0, 0, fxrandom(5, 10)*.35, fxrandom(5, 10)*.35);
                 //pg.pop(); 
                 // SUN
-                let sup = [sunPos[0]*baseWidth + fxrandom(-30, 30), sunPos[1]*baseHeight + fxrandom(-77, 77)];
+                let sup = [sunPos[0]*baseWidth + fxrandom(-100, 100), sunPos[1]*baseHeight + fxrandom(-100, 100)];
+                let toSun = [x-sup[0], y-sup[1]];
+                let angSun = Math.atan2(toSun[1], toSun[0]);
+                let xs = Math.cos(angSun)
+                let ys = Math.sin(angSun)
                 var dd = Math.sqrt((x-sup[0])*(x-sup[0])+(y-sup[1])*(y-sup[1])) / Math.sqrt(sup[0]*sup[0]+sup[1]*sup[1])
-                //dd = dd * map(noise(x*0.005, y*0.005, 831.31), 0, 1, .6, 2);
+                dd = dd * map(Math.pow(noise(xs*5.5, ys*5.5, 831.31), 3), 0, 1, .6, 2);
                 dd = min(dd*sunSpread, 1.0);
                 //col[0] = 255;
                 //col[1] = 255;
@@ -1009,15 +1062,28 @@ function generateBackground(){
                     //angle = angle + (-Math.atan2(sunPos[1]*baseWidth - y, sunPos[0]*baseWidth - x) - angle);
                 }
 
-                if((backgroundColor[0]+backgroundColor[1]+backgroundColor[2])/3 > -.35){
-                    col[0] = sunColor[0]*(1-dd)*(.5 + .5*sunPos[1])+dd*col[0];
+                if(isDark){
+                    col[0] = offcl2[0]*.1 + 35-map(y, 0, getHorizon(x), 0, 1)*22;
+                    col[1] = offcl2[1]*.1 + 49-map(y, 0, getHorizon(x), 0, 1)*22;
+                    col[2] = offcl2[2]*.1 + 65;
+                    col[0] = col[0] + .25*(backgroundColor[0]*255 - col[0]);
+                    col[1] = col[1] + .25*(backgroundColor[1]*255 - col[1]);
+                    col[2] = col[2] + .25*(backgroundColor[2]*255 - col[2]);
+                }
+
+                if(hasSun && !isDark){
+                    col[0] = sunColor[0]*(1-dd)*(2-sunPos[1])+dd*col[0];
                     col[1] = sunColor[1]*(1-dd)*(2-sunPos[1])+dd*col[1];
                     col[2] = sunColor[2]*(1-dd)*(2-sunPos[1])+dd*col[2];
-                    col[3] = 127;
                 }
-                //col[0] = offcl[0] + 33-map(y, 0, baseHeight*horizon, 0, 1)*22;
-                //col[1] = offcl[1] + 55-map(y, 0, baseHeight*horizon, 0, 1)*22;
-                //col[2] = offcl[2] + 55;
+
+                if(!isDark){
+                    col[0] = col[0] + .5*(backgroundColor[0]*255 - col[0]);
+                    col[1] = col[1] + .5*(backgroundColor[1]*255 - col[1]);
+                    col[2] = col[2] + .5*(backgroundColor[2]*255 - col[2]);
+                }
+
+                
             }
         }
 
@@ -1057,7 +1123,14 @@ function generateForeground(){
     var rr2 = fxrandom(rr1, rr1+0.35) // .565
     var dispr = fxrandom(0.03, 0.09)
 
-    for(var k = 0; k < 490000*(1-horizon); k++){
+    var frqx = map(power(noise(xx*0.001, y*0.001, 22.555), 1), 0, 1, 0.3, 2);
+    var frqy = frqx;
+    frqx = .5;
+    frqy = 3.;
+    var frqyp = .04;
+    var foregroundOpacity = fxrandom(122, 255);
+    var attenuation = fxrandom(0, 0.3);
+    for(var k = 0; k < 390000*(1-horizon); k++){
         var x = fxrandom(0, baseWidth);
         var y = fxrandom(getHorizon(x), baseHeight*1.0);
 
@@ -1065,13 +1138,13 @@ function generateForeground(){
 //for(var x = 0; x < baseDim; x += detail){
 //    for(var y = baseHeight*horizon; y < baseDim*1.1; y += detail){
         var perspective = map(y, getHorizon(x), baseHeight*1.0, .6, 1);
+        var ppfr = map(y, getHorizon(x), baseHeight*1.0, .7, 1);
 
         rr1 = map(noise(x*0.01, y*0.01+241.2141), 0, 1, 0.25, 0.5);
         rr2 = map(noise(x*0.01, y*0.01+33.44), 0, 1, rr1, rr1+0.35);
         dispr = map(noise(x*0.01, y*0.01+55.55), 0, 1, 0.03, 0.13);
         var xx = x;
-        var frqx = map(power(noise(xx*0.001, y*0.001, 22.555), 1), 0, 1, 0.3, 2);
-        var frqy = frqx;
+        frqy = 3*ppfr + (1-ppfr)*map(y, 0, baseHeight*1.0, 3, 2);
         frqx = frqy = .5;
         //var frqy = map(power(noise(xx*0.001, y*0.001, 313.31314), 1), 0, 1, 0.3, 2);
         var yy = y + 0*amp*(-power(noise(x*frq, y*frq), 2)) + fxrandom(-5,5);
@@ -1093,7 +1166,7 @@ function generateForeground(){
         else{
             var dx = fxrandom(5, 10)*.3*perspective;
             size = [dx, dx*(1 + fxrandom(1.5, 1.8))];
-            if(fxrandom(0,1000) > 960 || noise(xx*0.004*frqx, yy*0.02*frqy)+dispr*fxrandom(-1,1) < rr1 && fxrand()>0.4){
+            if(fxrandom(0,1000) > 960 || noise(xx*0.004*frqx, map(yy,getHorizon(xx), baseHeight, 0, 1)*frqyp*frqy)+dispr*fxrandom(-1,1) < rr1 && fxrand()>0.4){
 
                 col = [
                     offcl2[0] + groundclr.c[0] + fxrandom(-groundclr.cd[0], groundclr.cd[0]),
@@ -1103,7 +1176,7 @@ function generateForeground(){
                 ];
                 size = [dx, dx*(1 + fxrandom(1.5, 1.8))];
             }
-            else if(fxrandom(0,1000) > 960 || noise(xx*0.004*frqx, yy*0.02*frqy)+dispr*fxrandom(-1,1) < rr2 && fxrand()>0.4){
+            else if(fxrandom(0,1000) > 960 || noise(xx*0.004*frqx, map(yy,getHorizon(xx), baseHeight, 0, 1)*5.02*frqy)+dispr*fxrandom(-1,1) < rr2 && fxrand()>0.4){
                 col = [
                     offcl1[0] + groundclr.b[0] + fxrandom(-groundclr.bd[0], groundclr.bd[0]),
                     offcl1[1] + groundclr.b[1] + fxrandom(-groundclr.bd[1], groundclr.bd[1]),
@@ -1124,6 +1197,14 @@ function generateForeground(){
         pos[1] = pos[1] - canvasHeight/2*0 - baseHeight/2;
         pos[1] *= -1;
 
+        col[3] = foregroundOpacity;
+
+        if(isDark){
+            col[0] = col[0] + attenuation*(backgroundColor[0]*255 - col[0]);
+            col[1] = col[1] + attenuation*(backgroundColor[1]*255 - col[1]);
+            col[2] = col[2] + attenuation*(backgroundColor[2]*255 - col[2]);
+        }
+
         particlePositions.push(pos[0], pos[1], 0);
         particleColors.push(col[0]/255., col[1]/255., col[2]/255., col[3]/255.);
         particleSizes.push(size[0], size[1]);
@@ -1134,21 +1215,21 @@ function generateForeground(){
 }
 
 function windowResized() {
-    if(renderer){
-
+    if(renderer){oosZiN37KoLXHnZFB6oBWxS6Uqm2JkiZPLuB2qx4uY7UGxXyA64
+        oosZiN37KoLXHnZFB6oBWxS6Uqm2JkiZPLuB2qx4uY7UGxXyA64
         var ww = window.innerWidth || canvas.clientWidth || body.clientWidth;
         var wh = window.innerHeight|| canvas.clientHeight|| body.clientHeight;
 
-        baseWidth = ress-33;
-        baseHeight = ress-33;
+        baseWidth = ress-22;
+        baseHeight = ress-22;
 
         canvasWidth = ress;
         canvasHeight = ress;
 
         if(ww < ress+16 || wh < ress+16 || true){
             var mm = min(ww, wh);
-            canvasWidth = mm-10*mm/ress;
-            canvasHeight = mm-10*mm/ress;
+            canvasWidth = mm-22*mm/ress;
+            canvasHeight = mm-22*mm/ress;
             //baseWidth = mm-16-16;
             //baseHeight = mm-16-16;
         }

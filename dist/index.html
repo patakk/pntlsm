@@ -7,6 +7,7 @@
       //----fxhash = 'ooor2xpNJiW8MRWRWfK9M5JEi4HcMrG13wVDWFGwb7e1vR4NngQ';
       //----fxhash = 'oo1WwqZt4Au7dMzUEwjQvFC537HKMszqHg58VvKQUatUxXVv9a9';
       //----fxhash = 'oohvdq4obfhgnfh9ma3S4XF4U3ahA32okC9rSUFho3TQJVDRcpb';
+      //----fxhash = 'oo9ZZYZyz3n8W3xkLCm7WwNYuHtfspfFpxYFJbMkLjm4y3ib8ZK';
       let b58dec = str=>[...str].reduce((p,c)=>p*alphabet.length+alphabet.indexOf(c)|0, 0)
       let fxhashTrunc = fxhash.slice(2)
       let regex = new RegExp(".{" + ((fxhash.length/4)|0) + "}", 'g')

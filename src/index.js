@@ -1215,8 +1215,8 @@ function generateForeground(){
 }
 
 function windowResized() {
-    if(renderer){oosZiN37KoLXHnZFB6oBWxS6Uqm2JkiZPLuB2qx4uY7UGxXyA64
-        oosZiN37KoLXHnZFB6oBWxS6Uqm2JkiZPLuB2qx4uY7UGxXyA64
+    if(renderer){
+        
         var ww = window.innerWidth || canvas.clientWidth || body.clientWidth;
         var wh = window.innerHeight|| canvas.clientHeight|| body.clientHeight;
 
